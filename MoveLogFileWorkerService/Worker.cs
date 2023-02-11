@@ -16,7 +16,6 @@ namespace MoveLogFileWorkerService
             {
                 try
                 {
-
                     _logger.LogInformation("Worker running");
                     var firstDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
                     if (firstDayOfMonth == DateTime.Now.Date)
@@ -25,7 +24,8 @@ namespace MoveLogFileWorkerService
                         if (!Directory.Exists(HelperConst.SourcePath))
                         {
                             _logger.LogError($"SourcePath: {HelperConst.SourcePath} not exists!");
-                            return;
+                            await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
+                            continue;
                         }
                         Directory.CreateDirectory(HelperConst.TargetPath);
                         var files = Directory.GetFiles(HelperConst.SourcePath);
@@ -57,8 +57,8 @@ namespace MoveLogFileWorkerService
                                 _logger.LogInformation("Move file in {pathFrom} to {pathTo}", file, destinationFile);
                             }
                         }
-                        await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
                     }
+                    await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
                 }
                 catch (Exception ex)
                 {
