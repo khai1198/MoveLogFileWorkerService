@@ -1,4 +1,5 @@
 using MoveLogFileWorkerService;
+using System.Diagnostics;
 
 namespace MoveLogFileWorkerService
 {
@@ -17,48 +18,20 @@ namespace MoveLogFileWorkerService
                 try
                 {
                     _logger.LogInformation("Worker running");
-                    var firstDayOfMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
-                    if (firstDayOfMonth == DateTime.Now.Date)
-                    {
-                        _logger.LogInformation("Start move file");
-                        if (!Directory.Exists(HelperConst.SourcePath))
-                        {
-                            _logger.LogError($"SourcePath: {HelperConst.SourcePath} not exists!");
-                            await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
-                            continue;
-                        }
-                        Directory.CreateDirectory(HelperConst.TargetPath);
-                        var files = Directory.GetFiles(HelperConst.SourcePath);
-                        var dateTo = DateTime.Now.Date;
-                        foreach (var file in files)
-                        {
-                            var extention = Path.GetExtension(file);
-                            var fileName = Path.GetFileName(file);
-                            if (extention == ".txt")
-                            {
-                                var date = new DateTime(2000 + int.Parse(fileName.Substring(0, 2)), int.Parse(fileName.Substring(2, 2)), int.Parse(fileName.Substring(4, 2))).Date;
-                                if (date >= dateTo)
-                                {
-                                    continue;
-                                }
-                                var destinationFile = Path.Combine(HelperConst.TargetPath, fileName);
-                                File.Move(file, destinationFile);
-                                _logger.LogInformation("Move file in {pathFrom} to {pathTo}", file, destinationFile);
-                            }
-                            else if (extention == ".csv")
-                            {
-                                var date = new DateTime(int.Parse(fileName.Substring(0, 4)), int.Parse(fileName.Substring(4, 2)), int.Parse(fileName.Substring(6, 2))).Date;
-                                if (date >= dateTo)
-                                {
-                                    continue;
-                                }
-                                var destinationFile = Path.Combine(HelperConst.TargetPath, fileName);
-                                File.Move(file, destinationFile);
-                                _logger.LogInformation("Move file in {pathFrom} to {pathTo}", file, destinationFile);
-                            }
-                        }
-                    }
-                    await Task.Delay(TimeSpan.FromDays(1), stoppingToken);
+                    ProcessStartInfo info = new ProcessStartInfo("sqlcmd", @" -E -S localhost   -i C:\Users\khain\Downloads\backup.sql");
+                    //  Indicades if the Operative System shell is used, in this case it is not
+                    info.UseShellExecute = false;
+                    //No new window is required
+                    info.CreateNoWindow = true;
+                    //The windows style will be hidden
+                    info.WindowStyle = ProcessWindowStyle.Hidden;
+                    //The output will be read by the starndar output process
+                    info.RedirectStandardOutput = true;
+                    Process proc = new Process();
+                    proc.StartInfo = info;
+                    //Start the process
+                    proc.Start();
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                 }
                 catch (Exception ex)
                 {
