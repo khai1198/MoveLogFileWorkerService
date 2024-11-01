@@ -1,8 +1,7 @@
-
-
 using Microsoft.Data.SqlClient;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
+
 using System.Diagnostics;
 
 namespace MoveLogFileWorkerService
@@ -23,6 +22,10 @@ namespace MoveLogFileWorkerService
             var dir = _configuration.GetSection("CPath")?.Value ?? throw new Exception("Invalid CPath in config file");
             var server = _configuration.GetSection("Server")?.Value ?? throw new Exception("Invalid CPath in config file");
             var sqlConnection = _configuration.GetSection("ConnectionString")?.Value ?? throw new Exception("Invalid CPath in config file");
+            if (!int.TryParse(_configuration.GetSection("Period")?.Value, out int period))
+            {
+                period = 5;
+            }
             _logger.LogInformation("Start");
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -50,7 +53,7 @@ namespace MoveLogFileWorkerService
                     server1.ConnectionContext.ExecuteNonQuery(script);
 
                     _logger.LogDebug("Worker done!");
-                    await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(period), stoppingToken);
                 }
                 catch (Exception ex)
                 {
