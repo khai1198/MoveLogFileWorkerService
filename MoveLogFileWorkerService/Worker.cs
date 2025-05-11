@@ -34,12 +34,13 @@ namespace MoveLogFileWorkerService
         try
         {
           var date = DateTime.Now;
-          if(date.Hour < 7 || date.Hour > 16 || DateIndex == date.Date)
+          if (date.Hour < 7 || date.Hour > 16 || DateIndex == date.Date)
           {
             continue;
           }
           var st = Stopwatch.StartNew();
           var script = File.ReadAllText($@"{dir}\index.sql");
+          _logger.LogInformation("Worker start: {0}", script);
           using var conn = new SqlConnection(sqlConnection);
           conn.Open();
           using var command = new SqlCommand(script, conn);
@@ -49,7 +50,7 @@ namespace MoveLogFileWorkerService
           //server1.ConnectionContext.ExecuteNonQuery(script);
           conn.Close();
 
-          _logger.LogInformation($"Worker running ok: {0}", st.Elapsed.TotalMilliseconds);
+          _logger.LogInformation("Worker running ok: {0}", st.Elapsed.TotalMilliseconds);
           _logger.LogDebug("Worker done!");
           DateIndex = date.Date;
           await Task.Delay(TimeSpan.FromSeconds(period), stoppingToken);
