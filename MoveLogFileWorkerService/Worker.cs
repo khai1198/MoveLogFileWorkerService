@@ -28,6 +28,9 @@ namespace MoveLogFileWorkerService
       {
         period = 5;
       }
+
+      _logger.LogInformation("Wait");
+      await Task.Delay(TimeSpan.FromMinutes(3), stoppingToken);
       _logger.LogInformation("Start");
       while (!stoppingToken.IsCancellationRequested)
       {
@@ -44,8 +47,8 @@ namespace MoveLogFileWorkerService
           using var conn = new SqlConnection(sqlConnection);
           conn.Open();
           using var command = new SqlCommand(script, conn);
-          command.CommandTimeout = 600;
-          command.ExecuteNonQuery();
+          command.CommandTimeout = 1200;
+          await command.ExecuteNonQueryAsync(stoppingToken);
           //var server1 = new Server(new ServerConnection(conn));
           //server1.ConnectionContext.ExecuteNonQuery(script);
           conn.Close();
