@@ -32,3 +32,4 @@ Log.Logger = new LoggerConfiguration()
 Log.Information("Starting up");
 
 await host.RunAsync();
+Console.ReadLine();

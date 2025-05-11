@@ -47,11 +47,11 @@ namespace MoveLogFileWorkerService
                     ////Start the process
                     //proc.Start();
 
-                    string script = File.ReadAllText($@"{dir}\backup.sql");
-                    SqlConnection conn = new SqlConnection(sqlConnection);
-                    Server server1 = new Server(new ServerConnection(conn));
+                    var script = File.ReadAllText($@"{dir}\backup.sql");
+                    using var conn = new SqlConnection(sqlConnection);
+                    var server1 = new Server(new ServerConnection(conn));
                     server1.ConnectionContext.ExecuteNonQuery(script);
-
+                    conn.Close();
                     _logger.LogDebug("Worker done!");
                     await Task.Delay(TimeSpan.FromSeconds(period), stoppingToken);
                 }
