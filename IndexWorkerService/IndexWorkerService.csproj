@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <UserSecretsId>dotnet-MoveLogFileWorkerService-fbad58d2-0766-4a87-98ce-5d24baf32942</UserSecretsId>
+    <UserSecretsId>dotnet-IndexWorkerService-fbad58d2-0766-4a87-98ce-5d24baf32942</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
