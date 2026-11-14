@@ -1,7 +1,5 @@
 using Microsoft.Data.SqlClient;
-using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
-
+using Npgsql;
 using System.Diagnostics;
 
 namespace MoveLogFileWorkerService
@@ -37,20 +35,19 @@ namespace MoveLogFileWorkerService
         try
         {
           var date = DateTime.Now;
-          if (date.Hour < 7 || date.Hour > 16 || DateIndex == date.Date)
+          if (date.Hour < 12 || date.Hour > 13 || DateIndex == date.Date)
           {
             continue;
           }
           var st = Stopwatch.StartNew();
           var script = File.ReadAllText($@"{dir}\index.sql");
           _logger.LogInformation("Worker start: {0}", script);
-          using var conn = new SqlConnection(sqlConnection);
+
+          using var conn = new NpgsqlConnection(sqlConnection);
           conn.Open();
-          using var command = new SqlCommand(script, conn);
-          command.CommandTimeout = 2400;
-          await command.ExecuteNonQueryAsync(stoppingToken);
-          //var server1 = new Server(new ServerConnection(conn));
-          //server1.ConnectionContext.ExecuteNonQuery(script);
+          using var reindexCmd = new NpgsqlCommand(script, conn);
+          reindexCmd.CommandTimeout = 0;
+          reindexCmd.ExecuteNonQuery();
           conn.Close();
 
           _logger.LogInformation("Worker running ok: {0}", st.Elapsed.TotalMilliseconds);
