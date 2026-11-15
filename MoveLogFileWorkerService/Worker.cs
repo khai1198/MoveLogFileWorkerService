@@ -1,10 +1,3 @@
-
-
-using Microsoft.Data.SqlClient;
-using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
-using System.Diagnostics;
-
 namespace MoveLogFileWorkerService
 {
   public class Worker : BackgroundService
@@ -25,39 +18,34 @@ namespace MoveLogFileWorkerService
       var server = _configuration.GetSection("Server")?.Value ?? throw new Exception("Invalid CPath in config file");
       var sqlConnection = _configuration.GetSection("ConnectionString")?.Value ?? throw new Exception("Invalid CPath in config file");
       _logger.LogInformation("Start");
+      var service = new PostgreSqlBackupService(@"D:\Program Files\PostgreSQL\15\bin\pg_dump.exe");
       while (!stoppingToken.IsCancellationRequested)
       {
         try
         {
           var time = DateTime.Now;
-          if (time.Hour == 17)
-          {
-            _isRunning = false;
-            continue;
-          }
+          _logger.LogInformation("Start backup");
+          string result = await service.BackupAndUploadAsync(
+                // PostgreSQL
+                dbHost: "100.100.1.155",
+                dbPort: 5432,
+                database: "MexicoHSEReelTower",
+                dbUsername: "postgres",
+                dbPassword: "yourStrong123Password",
 
-          if (_isRunning)
-          {
-            continue;
-          }
+                // Local backup
+                localFolder: @"D:\Backup",
 
-          if (time.Hour != 15)
-          {
-            continue;
-          }
-          _isRunning = true;
-          var st = Stopwatch.StartNew();
-          var script = File.ReadAllText($@"{dir}\backup.sql");
-          _logger.LogInformation("Worker start: {0}", script);
-          using var conn = new SqlConnection(sqlConnection);
-          conn.Open();
-          using var command = new SqlCommand(script, conn);
-          command.CommandTimeout = 10800;
-          await command.ExecuteNonQueryAsync(stoppingToken);
-          //var server1 = new Server(new ServerConnection(conn));
-          //server1.ConnectionContext.ExecuteNonQuery(script);
-          conn.Close();
-          _logger.LogInformation("Worker running ok: {0}", st.Elapsed.TotalMilliseconds);
+                // FTP Server
+                ftpHost: "100.100.1.22",
+                ftpPort: 21,
+                ftpUsername: "anonymous",
+                ftpPassword: "123456",
+                ftpFolder: "/backup/postgresql"
+            );
+
+          await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+          //_logger.LogInformation("Worker running ok: {0}", st.Elapsed.TotalMilliseconds);
           _logger.LogDebug("Worker done!");
         }
         catch (Exception ex)
